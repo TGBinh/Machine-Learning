@@ -1,0 +1,671 @@
+{% extends 'base.html' %}
+
+{% block title %}Phân tích tài chính cá nhân - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-wallet text-success"></i> Phân tích tài chính cá nhân
+                </h1>
+                <p class="text-muted mb-0">Phân tích chi tiêu và nhận gợi ý tiết kiệm thông minh</p>
+            </div>
+            <a href="{% url 'transactions:home' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-upload"></i> Upload file dữ liệu cá nhân
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="fileInput" class="form-label">Chọn file Excel (.xlsx) - Dữ liệu giao dịch cá nhân</label>
+                        <input type="file" class="form-control" id="fileInput" name="file_excel" accept=".xlsx" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> 
+                            Sử dụng file <code>canhan.xlsx</code> hoặc file có cấu trúc tương tự với các cột: Mã giao dịch, Thời gian, Số tiền, Loại giao dịch, Nội dung giao dịch, v.v.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg" id="uploadBtn">
+                            <i class="fas fa-chart-pie"></i> Phân tích chi tiêu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- File Requirements -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-list-check"></i> Yêu cầu định dạng file
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Các cột bắt buộc:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Mã giao dịch</li>
+                            <li><i class="fas fa-check text-success"></i> Thời gian</li>
+                            <li><i class="fas fa-check text-success"></i> Số tiền</li>
+                            <li><i class="fas fa-check text-success"></i> Loại giao dịch</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Các cột bổ sung:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-info"></i> ID người nhận</li>
+                            <li><i class="fas fa-check text-info"></i> Số dư hiện tại</li>
+                            <li><i class="fas fa-check text-info"></i> Trạng thái</li>
+                            <li><i class="fas fa-check text-info"></i> Nội dung giao dịch</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section (Hidden initially) -->
+        <div id="resultsSection" class="d-none">
+            <!-- Overview Statistics -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-money-bill-wave text-success fa-2x mb-2"></i>
+                            <h5 class="card-title">Tổng chi tiêu</h5>
+                            <h3 class="text-success" id="totalSpending">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-chart-line text-info fa-2x mb-2"></i>
+                            <h5 class="card-title">Chi tiêu TB/ngày</h5>
+                            <h3 class="text-info" id="avgDailySpending">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-calendar-alt text-warning fa-2x mb-2"></i>
+                            <h5 class="card-title">Số ngày phân tích</h5>
+                            <h3 class="text-warning" id="analysisDays">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="fas fa-exchange-alt text-primary fa-2x mb-2"></i>
+                            <h5 class="card-title">Tổng giao dịch</h5>
+                            <h3 class="text-primary" id="totalTransactions">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spending by Category -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie"></i> Chi tiêu theo danh mục
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="categoryPieChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Danh mục</th>
+                                            <th>Số tiền</th>
+                                            <th>Tỷ lệ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="categoryTableBody">
+                                        <!-- Data will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spending Trend -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-area"></i> Xu hướng chi tiêu
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Savings Suggestions -->
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-piggy-bank"></i> Gợi ý tiết kiệm
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success mb-4">
+                        <h6 class="alert-heading">Tiềm năng tiết kiệm</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Mục tiêu tiết kiệm:</strong> <span id="savingsTarget">0</span>/tháng
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Có thể tiết kiệm:</strong> <span id="potentialSavings">0</span>/tháng
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Tỷ lệ đạt được:</strong> <span id="achievableRate">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="savingSuggestions">
+                        <!-- Suggestions will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Report -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt"></i> Báo cáo Chi tiết
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>Chi tiêu lớn nhất</h6>
+                            <ul id="topExpensesList" class="list-unstyled">
+                                <!-- Data will be populated here -->
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Chi tiêu theo giờ</h6>
+                            <div class="detailed-chart-container">
+                                <canvas id="hourlySpendingChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Chi tiêu theo ngày trong tuần</h6>
+                            <div class="detailed-chart-container">
+                                <canvas id="dailySpendingChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Spending Insights -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6>Thông tin chi tiêu</h6>
+                            <div id="spendingInsights" class="alert alert-info">
+                                <!-- Data will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Report Button -->
+            <div class="text-center mt-4">
+                <button class="btn btn-primary" onclick="downloadReport()">
+                    <i class="fas fa-download"></i> Tải báo cáo PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let analysisData = null;
+
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    if (!fileInput.files[0]) {
+        hienThiThongBao('Vui lòng chọn file để upload', 'warning');
+        return;
+    }
+    
+    // Disable button và hiển thị loading
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang phân tích...';
+    
+    // Tạo FormData và upload
+    const formData = new FormData(this);
+    
+    // Tạo AbortController để handle timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+        controller.abort();
+    }, 10000); // 10 giây timeout
+    
+    fetch("{% url 'transactions:upload_personal_finance' %}", {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        signal: controller.signal
+    })
+    .then(response => response.json())
+    .then(data => {
+        clearTimeout(timeoutId); // Clear timeout khi thành công
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-chart-pie"></i> Phân tích Chi tiêu';
+        
+        if (data.thanh_cong) {
+            hienThiThongBao('Phân tích hoàn tất!', 'success');
+            document.getElementById('resultsSection').classList.remove('d-none');
+            
+            analysisData = data.results;
+            
+            // Display results
+            displayOverview(analysisData.overview);
+            displayCategoryAnalysis(analysisData.categories);
+            displayTrend(analysisData.trend);
+            displaySavingSuggestions(analysisData.savings);
+            displayDetailedReport(analysisData.detailed);
+            
+        } else {
+            hienThiThongBao(data.loi || 'Có lỗi xảy ra', 'danger');
+        }
+    })
+    .catch(error => {
+        clearTimeout(timeoutId); // Clear timeout khi có lỗi
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-chart-pie"></i> Phân tích Chi tiêu';
+        
+        if (error.name === 'AbortError') {
+            hienThiThongBao('Phân tích bị timeout (quá 20 giây). Vui lòng thử lại với file nhỏ hơn.', 'warning');
+        } else {
+            hienThiThongBao('Có lỗi xảy ra khi phân tích', 'danger');
+        }
+        console.error('Error:', error);
+    });
+});
+
+function displayOverview(overview) {
+    document.getElementById('totalSpending').textContent = formatTien(overview.total_spending);
+    document.getElementById('avgDailySpending').textContent = formatTien(overview.avg_daily_spending);
+    document.getElementById('analysisDays').textContent = overview.analysis_days;
+    document.getElementById('totalTransactions').textContent = formatSo(overview.total_transactions);
+}
+
+function displayCategoryAnalysis(categories) {
+    // Pie chart
+    const ctx = document.getElementById('categoryPieChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: categories.labels,
+            datasets: [{
+                data: categories.values,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Phân bố chi tiêu theo danh mục'
+                }
+            }
+        }
+    });
+    
+    // Table
+    const tbody = document.getElementById('categoryTableBody');
+    tbody.innerHTML = '';
+    categories.details.forEach(cat => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${cat.name}</td>
+            <td>${formatTien(cat.amount)}</td>
+            <td>${cat.percentage}%</td>
+        `;
+    });
+}
+
+function displayTrend(trend) {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: trend.labels,
+            datasets: [{
+                label: 'Chi tiêu',
+                data: trend.values,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Xu hướng chi tiêu theo thời gian'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatTien(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function displaySavingSuggestions(savings) {
+    document.getElementById('savingsTarget').textContent = formatTien(savings.target);
+    document.getElementById('potentialSavings').textContent = formatTien(savings.potential);
+    document.getElementById('achievableRate').textContent = savings.achievable_rate + '%';
+    
+    const suggestionsDiv = document.getElementById('savingSuggestions');
+    suggestionsDiv.innerHTML = '';
+    
+    savings.suggestions.forEach((suggestion, index) => {
+        const card = document.createElement('div');
+        card.className = 'card mb-3';
+        card.innerHTML = `
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-lightbulb text-warning"></i> 
+                    Gợi ý ${index + 1}: ${suggestion.title}
+                </h6>
+                <p class="card-text">${suggestion.description}</p>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Danh mục: ${suggestion.category}</span>
+                    <span class="text-success">Tiết kiệm: ${formatTien(suggestion.saving_amount)}/tháng</span>
+                </div>
+            </div>
+        `;
+        suggestionsDiv.appendChild(card);
+    });
+}
+
+function displayDetailedReport(detailed) {
+    // Top expenses
+    const topExpensesList = document.getElementById('topExpensesList');
+    topExpensesList.innerHTML = '';
+    detailed.top_expenses.forEach(expense => {
+        const li = document.createElement('li');
+        li.className = 'mb-2';
+        li.innerHTML = `
+            <div class="d-flex justify-content-between">
+                <span>${expense.description}</span>
+                <strong>${formatTien(expense.amount)}</strong>
+            </div>
+            <small class="text-muted">${formatNgay(expense.date)}</small>
+        `;
+        topExpensesList.appendChild(li);
+    });
+    
+    // Hourly spending chart - Similar style to trend chart
+    const hourlyCtx = document.getElementById('hourlySpendingChart').getContext('2d');
+    new Chart(hourlyCtx, {
+        type: 'line',
+        data: {
+            labels: detailed.hourly_spending.labels,
+            datasets: [{
+                label: 'Chi tiêu (VND)',
+                data: detailed.hourly_spending.values,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1,
+                fill: true,
+                pointRadius: 2,
+                pointHoverRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 10
+                        },
+                        maxRotation: 45
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    display: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    },
+                    ticks: {
+                        font: {
+                            size: 10
+                        },
+                        callback: function(value) {
+                            if (value >= 1000000) {
+                                return (value/1000000).toFixed(1) + 'M';
+                            } else if (value >= 1000) {
+                                return (value/1000).toFixed(0) + 'k';
+                            }
+                            return value;
+                        }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+    
+    // Daily spending chart - Bar chart similar to trend chart
+    const dailyCtx = document.getElementById('dailySpendingChart').getContext('2d');
+    new Chart(dailyCtx, {
+        type: 'bar',
+        data: {
+            labels: detailed.daily_spending.labels,
+            datasets: [{
+                label: 'Chi tiêu (VND)',
+                data: detailed.daily_spending.values,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)',
+                    'rgba(255, 159, 64, 0.6)',
+                    'rgba(199, 199, 199, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 10
+                        },
+                        maxRotation: 0
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    display: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    },
+                    ticks: {
+                        font: {
+                            size: 10
+                        },
+                        callback: function(value) {
+                            if (value >= 1000000) {
+                                return (value/1000000).toFixed(1) + 'M';
+                            } else if (value >= 1000) {
+                                return (value/1000).toFixed(0) + 'k';
+                            }
+                            return value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Spending insights
+    const insightsDiv = document.getElementById('spendingInsights');
+    if (detailed.spending_insights && detailed.spending_insights.length > 0) {
+        const insightsList = detailed.spending_insights.map(insight => `<li>${insight}</li>`).join('');
+        insightsDiv.innerHTML = `<ul class="mb-0">${insightsList}</ul>`;
+    } else {
+        insightsDiv.innerHTML = '<p class="mb-0">Chưa có đủ dữ liệu để phân tích thói quen chi tiêu.</p>';
+    }
+}
+
+function downloadReport() {
+    if (!analysisData) {
+        hienThiThongBao('Không có dữ liệu để tải xuống', 'warning');
+        return;
+    }
+    
+    
+    // Tạo AbortController để handle timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+        controller.abort();
+    }, 10000); // 10 giây timeout
+    
+    fetch("{% url 'transactions:download_personal_report' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify(analysisData),
+        signal: controller.signal
+    })
+    .then(response => {
+        clearTimeout(timeoutId); // Clear timeout khi thành công
+        
+        // Kiểm tra content type
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+            // Response là JSON (có lỗi)
+            return response.json().then(data => {
+                throw new Error(data.loi || 'Có lỗi xảy ra');
+            });
+        } else if (response.ok) {
+            // Response là file
+            return response.blob();
+        } else {
+            throw new Error('Network response was not ok');
+        }
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'bao_cao_tai_chinh_ca_nhan.pdf';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        hienThiThongBao('Đã tải báo cáo thành công!', 'success');
+    })
+    .catch(error => {
+        clearTimeout(timeoutId); // Clear timeout khi có lỗi
+        
+        if (error.name === 'AbortError') {
+            hienThiThongBao('Tạo báo cáo bị timeout (quá 20 giây). Vui lòng thử lại.', 'warning');
+        } else {
+            hienThiThongBao('Lỗi khi tạo báo cáo', 'danger');
+        }
+        console.error('Error:', error);
+    });
+}
+</script>
+{% endblock %}

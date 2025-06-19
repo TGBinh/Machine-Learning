@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Trang chủ - Hệ thống phân tích tài chính{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 text-primary mb-3">
+                    <i class="fas fa-chart-line"></i> Hệ thống phân tích tài chính
+                </h1>
+                <p class="lead text-muted">
+                    Chọn một trong hai chức năng phân tích bên dưới để bắt đầu
+                </p>
+            </div>
+
+            <!-- Two Options -->
+            <div class="row">
+                <!-- Fraud Detection Option -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm hover-card">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <div class="bg-danger rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                                    <i class="fas fa-shield-alt text-white fa-3x"></i>
+                                </div>
+                            </div>
+                            <h3 class="card-title mb-3">Phát hiện gian lận</h3>
+                            <p class="card-text text-muted mb-4">
+                                Phân tích dữ liệu giao dịch của nhiều người dùng để phát hiện các giao dịch bất thường và khả nghi sử dụng thuật toán K-Means clustering
+                            </p>
+                            <ul class="list-unstyled text-start mb-4">
+                                <li><i class="fas fa-check text-success"></i> Phân tích dữ liệu đa người dùng</li>
+                                <li><i class="fas fa-check text-success"></i> Thuật toán K-Means với Elbow method</li>
+                                <li><i class="fas fa-check text-success"></i> Phát hiện giao dịch bất thường</li>
+                                <li><i class="fas fa-check text-success"></i> Biểu đồ trực quan kết quả</li>
+                            </ul>
+                            <a href="{% url 'transactions:fraud_detection' %}" class="btn btn-danger btn-lg">
+                                <i class="fas fa-arrow-right"></i> Bắt đầu phân tích
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Finance Option -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm hover-card">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                                    <i class="fas fa-wallet text-white fa-3x"></i>
+                                </div>
+                            </div>
+                            <h3 class="card-title mb-3">Phân tích tài chính cá nhân</h3>
+                            <p class="card-text text-muted mb-4">
+                                Phân tích chi tiêu cá nhân, thống kê theo danh mục và nhận gợi ý tiết kiệm dựa trên thói quen chi tiêu của bạn
+                            </p>
+                            <ul class="list-unstyled text-start mb-4">
+                                <li><i class="fas fa-check text-success"></i> Phân tích dữ liệu cá nhân</li>
+                                <li><i class="fas fa-check text-success"></i> Thống kê chi tiêu theo danh mục</li>
+                                <li><i class="fas fa-check text-success"></i> Gợi ý tiết kiệm thông minh</li>
+                                <li><i class="fas fa-check text-success"></i> Báo cáo tài chính chi tiết</li>
+                            </ul>
+                            <a href="{% url 'transactions:personal_finance' %}" class="btn btn-success btn-lg">
+                                <i class="fas fa-arrow-right"></i> Bắt đầu phân tích
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="alert alert-info mt-5">
+                <h6 class="alert-heading"><i class="fas fa-info-circle"></i> Thông tin quan trọng</h6>
+                <hr>
+                <ul class="mb-0">
+                    <li><strong>Phát hiện gian lận:</strong> Sử dụng file <code>phgl.xlsx</code> chứa dữ liệu giao dịch của nhiều người dùng</li>
+                    <li><strong>Phân tích cá nhân:</strong> Sử dụng file <code>canhan.xlsx</code> chứa dữ liệu giao dịch của một cá nhân</li>
+                    <li>Dữ liệu của bạn được xử lý an toàn và xóa ngay sau khi phân tích</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+}
+
+.btn-lg {
+    padding: 12px 30px;
+    font-weight: 500;
+}
+</style>
+{% endblock %}

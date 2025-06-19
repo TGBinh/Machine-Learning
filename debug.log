@@ -1,0 +1,68 @@
+INFO 2025-06-18 14:50:57,956 personal_finance 20108 17284 Pre-trained personal finance model loaded
+INFO 2025-06-18 14:51:03,535 personal_finance 6964 15808 Pre-trained personal finance model loaded
+INFO 2025-06-18 14:51:09,571 personal_finance 12180 17444 Pre-trained personal finance model loaded
+INFO 2025-06-18 14:51:14,881 personal_finance 6172 2632 Pre-trained personal finance model loaded
+INFO 2025-06-18 14:51:24,234 personal_finance 16644 20076 Pre-trained personal finance model loaded
+INFO 2025-06-18 14:51:46,768 personal_finance 16644 11248 Starting personal finance analysis...
+INFO 2025-06-18 14:51:46,769 personal_finance 16644 11248 Preprocessing data...
+INFO 2025-06-18 14:51:46,853 personal_finance 16644 11248 Categorization results:
+INFO 2025-06-18 14:51:46,854 personal_finance 16644 11248   Ăn uống: 95 transactions (74.2%)
+INFO 2025-06-18 14:51:46,854 personal_finance 16644 11248   Giao thông: 13 transactions (10.2%)
+INFO 2025-06-18 14:51:46,854 personal_finance 16644 11248   Mua sắm: 10 transactions (7.8%)
+INFO 2025-06-18 14:51:46,854 personal_finance 16644 11248   Khác: 4 transactions (3.1%)
+INFO 2025-06-18 14:51:46,855 personal_finance 16644 11248   Điện nước: 2 transactions (1.6%)
+INFO 2025-06-18 14:51:46,855 personal_finance 16644 11248   Học tập: 2 transactions (1.6%)
+INFO 2025-06-18 14:51:46,855 personal_finance 16644 11248   Nhà cửa: 2 transactions (1.6%)
+INFO 2025-06-18 14:51:46,855 personal_finance 16644 11248 Sample categorized transactions:
+INFO 2025-06-18 14:51:46,856 personal_finance 16644 11248   'Tiền ăn' -> Ăn uống
+INFO 2025-06-18 14:51:46,857 personal_finance 16644 11248   'Tiền ăn' -> Ăn uống
+INFO 2025-06-18 14:51:46,857 personal_finance 16644 11248   'Tiền xe' -> Giao thông
+INFO 2025-06-18 14:51:46,857 personal_finance 16644 11248   'Tiền ăn' -> Ăn uống
+INFO 2025-06-18 14:51:46,858 personal_finance 16644 11248   'Tiền ăn' -> Ăn uống
+INFO 2025-06-18 14:51:46,858 personal_finance 16644 11248   'Tiền mua sắm' -> Mua sắm
+INFO 2025-06-18 14:51:46,859 personal_finance 16644 11248   'Tiền ăn' -> Ăn uống
+INFO 2025-06-18 14:51:46,859 personal_finance 16644 11248   'Tiền ăn' -> Ăn uống
+INFO 2025-06-18 14:51:46,859 personal_finance 16644 11248   'Tiền ăn' -> Ăn uống
+INFO 2025-06-18 14:51:46,859 personal_finance 16644 11248   'Tiền ăn' -> Ăn uống
+INFO 2025-06-18 14:51:46,860 personal_finance 16644 11248 Processed 128 spending transactions
+INFO 2025-06-18 14:51:46,860 personal_finance 16644 11248 Processed 128 transactions, starting detailed analysis...
+INFO 2025-06-18 14:51:46,860 personal_finance 16644 11248 Analyzing overview...
+INFO 2025-06-18 14:51:46,864 personal_finance 16644 11248 Analyzing categories...
+INFO 2025-06-18 14:51:46,871 personal_finance 16644 11248 Analyzing trends...
+INFO 2025-06-18 14:51:46,886 personal_finance 16644 11248 Generating savings suggestions...
+INFO 2025-06-18 14:51:46,900 personal_finance 16644 11248 Generating detailed report...
+INFO 2025-06-18 14:51:46,926 personal_finance 16644 11248 Compiling results...
+INFO 2025-06-18 14:51:46,926 personal_finance 16644 11248 Converting to JSON-safe format...
+INFO 2025-06-18 15:34:25,399 personal_finance 19472 17808 Pre-trained personal finance model loaded
+INFO 2025-06-19 13:22:27,751 personal_finance 9888 12788 Pre-trained personal finance model loaded
+INFO 2025-06-19 13:22:36,806 personal_finance 9888 18384 Starting personal finance analysis...
+INFO 2025-06-19 13:22:36,807 personal_finance 9888 18384 Preprocessing data...
+INFO 2025-06-19 13:22:36,836 personal_finance 9888 18384 Categorization results:
+INFO 2025-06-19 13:22:36,836 personal_finance 9888 18384   Ăn uống: 95 transactions (74.2%)
+INFO 2025-06-19 13:22:36,836 personal_finance 9888 18384   Giao thông: 13 transactions (10.2%)
+INFO 2025-06-19 13:22:36,836 personal_finance 9888 18384   Mua sắm: 10 transactions (7.8%)
+INFO 2025-06-19 13:22:36,836 personal_finance 9888 18384   Khác: 4 transactions (3.1%)
+INFO 2025-06-19 13:22:36,836 personal_finance 9888 18384   Điện nước: 2 transactions (1.6%)
+INFO 2025-06-19 13:22:36,837 personal_finance 9888 18384   Học tập: 2 transactions (1.6%)
+INFO 2025-06-19 13:22:36,837 personal_finance 9888 18384   Nhà cửa: 2 transactions (1.6%)
+INFO 2025-06-19 13:22:36,837 personal_finance 9888 18384 Sample categorized transactions:
+INFO 2025-06-19 13:22:36,837 personal_finance 9888 18384   'Tiền ăn' -> Ăn uống
+INFO 2025-06-19 13:22:36,837 personal_finance 9888 18384   'Tiền ăn' -> Ăn uống
+INFO 2025-06-19 13:22:36,837 personal_finance 9888 18384   'Tiền xe' -> Giao thông
+INFO 2025-06-19 13:22:36,838 personal_finance 9888 18384   'Tiền ăn' -> Ăn uống
+INFO 2025-06-19 13:22:36,838 personal_finance 9888 18384   'Tiền ăn' -> Ăn uống
+INFO 2025-06-19 13:22:36,838 personal_finance 9888 18384   'Tiền mua sắm' -> Mua sắm
+INFO 2025-06-19 13:22:36,838 personal_finance 9888 18384   'Tiền ăn' -> Ăn uống
+INFO 2025-06-19 13:22:36,838 personal_finance 9888 18384   'Tiền ăn' -> Ăn uống
+INFO 2025-06-19 13:22:36,838 personal_finance 9888 18384   'Tiền ăn' -> Ăn uống
+INFO 2025-06-19 13:22:36,838 personal_finance 9888 18384   'Tiền ăn' -> Ăn uống
+INFO 2025-06-19 13:22:36,838 personal_finance 9888 18384 Processed 128 spending transactions
+INFO 2025-06-19 13:22:36,838 personal_finance 9888 18384 Processed 128 transactions, starting detailed analysis...
+INFO 2025-06-19 13:22:36,838 personal_finance 9888 18384 Analyzing overview...
+INFO 2025-06-19 13:22:36,840 personal_finance 9888 18384 Analyzing categories...
+INFO 2025-06-19 13:22:36,842 personal_finance 9888 18384 Analyzing trends...
+INFO 2025-06-19 13:22:36,848 personal_finance 9888 18384 Generating savings suggestions...
+INFO 2025-06-19 13:22:36,852 personal_finance 9888 18384 Generating detailed report...
+INFO 2025-06-19 13:22:36,860 personal_finance 9888 18384 Compiling results...
+INFO 2025-06-19 13:22:36,860 personal_finance 9888 18384 Converting to JSON-safe format...
+INFO 2025-06-19 14:32:37,034 personal_finance 16636 19100 Pre-trained personal finance model loaded

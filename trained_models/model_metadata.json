@@ -1,0 +1,18 @@
+{
+  "training_timestamp": "2025-06-13T15:36:18.326640",
+  "fraud_data_hash": "da870326a87e8d354899b5e9ecbb345e",
+  "personal_data_hash": "2c333d040f36f92e5ece9c8d892200f4",
+  "fraud_model_stats": {
+    "total_samples": 2512,
+    "features_count": 8,
+    "threshold_percentile": 95
+  },
+  "personal_model_stats": {
+    "total_transactions": 1949,
+    "total_spending": 905782070.0,
+    "avg_transaction": 464741.9548486403,
+    "median_transaction": 104920.0,
+    "spending_std": 2183753.7495392673
+  },
+  "model_version": "1.0"
+}

@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+
+{% block title %}Phát hiện gian lận - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-shield-alt text-danger"></i> Phát hiện gian lận
+                </h1>
+                <p class="text-muted mb-0">Phân tích dữ liệu giao dịch để phát hiện các hoạt động bất thường</p>
+            </div>
+            <a href="{% url 'transactions:home' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-upload"></i> Upload file dữ liệu giao dịch
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="fileInput" class="form-label">Chọn file Excel (.xlsx) - Dữ liệu giao dịch đa người dùng</label>
+                        <input type="file" class="form-control" id="fileInput" name="file_excel" accept=".xlsx" required>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle"></i> 
+                            Sử dụng file <code>phgl.xlsx</code> hoặc file có cấu trúc tương tự với các cột: TransactionID, AccountID, TransactionAmount, TransactionDate, v.v.
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger btn-lg" id="uploadBtn">
+                            <i class="fas fa-search"></i> Phân tích gian lận
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- File Requirements -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-list-check"></i> Yêu cầu định dạng file
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Các cột bắt buộc:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> TransactionID</li>
+                            <li><i class="fas fa-check text-success"></i> AccountID</li>
+                            <li><i class="fas fa-check text-success"></i> TransactionAmount</li>
+                            <li><i class="fas fa-check text-success"></i> TransactionDate</li>
+                            <li><i class="fas fa-check text-success"></i> TransactionType</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Các cột bổ sung:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-info"></i> Location</li>
+                            <li><i class="fas fa-check text-info"></i> DeviceID</li>
+                            <li><i class="fas fa-check text-info"></i> IP Address</li>
+                            <li><i class="fas fa-check text-info"></i> MerchantID</li>
+                            <li><i class="fas fa-check text-info"></i> Channel</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section (Hidden initially) -->
+        <div id="resultsSection" class="d-none">
+            <!-- K-means Clustering Results -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-scatter"></i> Kết quả phân cụm K-Means
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Biểu đồ elbow method</h6>
+                            <canvas id="elbowChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Phân bố cụm</h6>
+                            <canvas id="clusterChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fraud Detection Results -->
+            <div class="card mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Giao dịch nghi ngờ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger mb-4">
+                        <h6 class="alert-heading">Tổng quan</h6>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Tổng giao dịch:</strong> <span id="totalTransactions">0</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Giao dịch nghi ngờ:</strong> <span id="suspiciousTransactions">0</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Tỷ lệ:</strong> <span id="fraudRate">0%</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Tổng giá trị:</strong> <span id="totalSuspiciousAmount">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="fraudTable">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Account ID</th>
+                                    <th>Số tiền</th>
+                                    <th>Ngày giao dịch</th>
+                                    <th>Loại</th>
+                                    <th>Lý do nghi ngờ</th>
+                                    <th>Mức độ rủi ro</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fraudTableBody">
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cluster Visualization -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-project-diagram"></i> Trực quan hóa Phân cụm
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="scatterPlot"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    if (!fileInput.files[0]) {
+        hienThiThongBao('Vui lòng chọn file để upload', 'warning');
+        return;
+    }
+    
+    // Disable button và hiển thị loading
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang phân tích...';
+    
+    // Tạo FormData và upload
+    const formData = new FormData(this);
+    
+    // Tạo AbortController để handle timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+        controller.abort();
+    }, 10000); // 10 giây timeout
+    
+    fetch("{% url 'transactions:upload_fraud_detection' %}", {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        signal: controller.signal
+    })
+    .then(response => response.json())
+    .then(data => {
+        clearTimeout(timeoutId); // Clear timeout khi thành công
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-search"></i> Phân tích Gian lận';
+        
+        if (data.thanh_cong) {
+            hienThiThongBao('Phân tích hoàn tất!', 'success');
+            document.getElementById('resultsSection').classList.remove('d-none');
+            
+            // Display results
+            displayFraudResults(data.results);
+            
+            // Create charts
+            createElbowChart(data.elbow_data);
+            createClusterChart(data.cluster_data);
+            createScatterPlot(data.scatter_data);
+            
+        } else {
+            hienThiThongBao(data.loi || 'Có lỗi xảy ra', 'danger');
+        }
+    })
+    .catch(error => {
+        clearTimeout(timeoutId); // Clear timeout khi có lỗi
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-search"></i> Phân tích Gian lận';
+        
+        if (error.name === 'AbortError') {
+            hienThiThongBao('Phân tích bị timeout (quá 20 giây). Vui lòng thử lại với file nhỏ hơn.', 'warning');
+        } else {
+            hienThiThongBao('Có lỗi xảy ra khi phân tích', 'danger');
+        }
+        console.error('Error:', error);
+    });
+});
+
+function displayFraudResults(results) {
+    // Update summary
+    document.getElementById('totalTransactions').textContent = formatSo(results.total_transactions);
+    document.getElementById('suspiciousTransactions').textContent = formatSo(results.suspicious_count);
+    document.getElementById('fraudRate').textContent = results.fraud_rate + '%';
+    document.getElementById('totalSuspiciousAmount').textContent = formatTien(results.total_suspicious_amount);
+    
+    // Update table
+    const tbody = document.getElementById('fraudTableBody');
+    tbody.innerHTML = '';
+    
+    results.suspicious_transactions.forEach(trans => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${trans.transaction_id}</td>
+            <td>${trans.account_id}</td>
+            <td>${formatTien(trans.amount)}</td>
+            <td>${formatNgay(trans.date)}</td>
+            <td>${trans.type}</td>
+            <td>${trans.reason}</td>
+            <td><span class="badge bg-${getRiskBadgeClass(trans.risk_level)}">${trans.risk_level}</span></td>
+        `;
+    });
+}
+
+function getRiskBadgeClass(riskLevel) {
+    switch(riskLevel) {
+        case 'Cao': return 'danger';
+        case 'Trung bình': return 'warning';
+        case 'Thấp': return 'info';
+        default: return 'secondary';
+    }
+}
+
+function createElbowChart(data) {
+    const ctx = document.getElementById('elbowChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.k_values,
+            datasets: [{
+                label: 'WCSS',
+                data: data.wcss_values,
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Elbow Method - Xác định số cụm tối ưu'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Số cụm (k)'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'WCSS'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createClusterChart(data) {
+    const ctx = document.getElementById('clusterChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                data: data.values,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Phân bố giao dịch theo cụm'
+                }
+            }
+        }
+    });
+}
+
+function createScatterPlot(data) {
+    const ctx = document.getElementById('scatterPlot').getContext('2d');
+    new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: data.datasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Biểu đồ phân tán - Giao dịch theo cụm'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Scaled Feature 1'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Scaled Feature 2'
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}
